@@ -17,6 +17,7 @@ import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.PermissionUtils;
 
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -24,6 +25,7 @@ import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 import com.polidea.rxandroidble2.RxBleDevice;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView lv_scan = null;
     private BluetoothManager btManager = null;
 
+
     private ScanCallback mLeScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -72,13 +75,29 @@ public class MainActivity extends AppCompatActivity {
             }
 
             String mDeviceAddress = newDevice.getAddress();
-            add_device_to_attack(mDeviceAddress);
+            android.support.design.widget.TextInputEditText excludedMacs = findViewById(R.id.macToExclude);
+
+            String[] listeMacToExclude = excludedMacs.getText().toString().split("/");
+
+            Boolean ajouterDevice = true;
+            for (String adresseMacActuelle:listeMacToExclude) {
+                if (adresseMacActuelle.equals(device_address)){
+                    ajouterDevice = false;
+                }
+            }
+            if (ajouterDevice){
+                devicesAdapter.getDeviceByAddress(mDeviceAddress).setOtherArgument("(target)");
+                add_device_to_attack(mDeviceAddress);
+            }else{
+                devicesAdapter.getDeviceByAddress(mDeviceAddress).setOtherArgument("(Not Attacked)");
+            }
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_devices_activity);
 
         tv_scanning_state = findViewById(R.id.scannning_state);
@@ -134,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab_scan = findViewById(R.id.fab_scan);
 
+
         fab_scan.setOnClickListener((View onClick) -> {
             if(!scanning)
             {
@@ -183,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         stopScan();
     }
 
@@ -193,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
         {
             return;
         }
+
         this.devices_to_attack.add(device_address);
     }
 

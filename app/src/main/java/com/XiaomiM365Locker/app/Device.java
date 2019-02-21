@@ -17,7 +17,24 @@ public class Device {
     /**
      * Display Name
      */
+    private String otherArgument = "";
     private String mDisplayName;
+
+    public boolean isInitName() {
+        return initName;
+    }
+
+    boolean initName = true;
+
+    public String getOriginalName() {
+        return originalName;
+    }
+
+    public void setOriginalName(String originalName) {
+        this.originalName = originalName;
+    }
+
+    private String originalName;
     private RxBleConnection.RxBleConnectionState state;
 
     public Device(BluetoothDevice device, int rssi) {
@@ -41,6 +58,8 @@ public class Device {
         return mRssi;
     }
 
+
+
     public void setRssi(int rssi) {
         mRssi = rssi;
     }
@@ -60,5 +79,18 @@ public class Device {
 
     public void setDisplayName(String displayName) {
         mDisplayName = displayName;
+        if (initName){
+            originalName = displayName;
+            initName = false;
+        }
     }
+
+    public String getOtherArgument() {
+        return otherArgument;
+    }
+
+    public void setOtherArgument(String stringRecue) {
+        otherArgument = stringRecue;
+    }
+
 }

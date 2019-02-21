@@ -34,6 +34,11 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
             convertView = mInflater.inflate(mResId, null);
         }
         TextView name = (TextView) convertView.findViewById(R.id.device_name);
+        if (item.isInitName()){
+            item.setDisplayName(item.getDisplayName());
+        }else{
+            item.setDisplayName(item.getOtherArgument()+item.getOriginalName());
+        }
         name.setText(item.getDisplayName());
         TextView address = (TextView) convertView.findViewById(R.id.device_address);
         address.setText(item.getDevice().getAddress());
