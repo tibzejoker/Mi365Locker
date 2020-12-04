@@ -38,7 +38,7 @@ public class HexString {
     }
 
     public static Integer twosComp(String str) {
-        Integer num = Integer.valueOf(str, 16);
+        int num = Integer.valueOf(str, 16);
         return (num > 32767) ? num - 65536 : num;
     }
 }

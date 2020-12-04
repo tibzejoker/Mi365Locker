@@ -15,9 +15,9 @@ import java.util.List;
 
 public class DeviceAdapter extends ArrayAdapter<Device> {
     private static final String PREFIX_RSSI = "RSSI:";
-    private List<Device> mList;
-    private LayoutInflater mInflater;
-    private int mResId;
+    private final List<Device> mList;
+    private final LayoutInflater mInflater;
+    private final int mResId;
 
     public DeviceAdapter(Context context, int resId, List<Device> objects) {
         super(context, resId, objects);
@@ -28,24 +28,24 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Device item = (Device) getItem(position);
+        Device item = getItem(position);
 
         if (convertView == null) {
             convertView = mInflater.inflate(mResId, null);
         }
-        TextView name = (TextView) convertView.findViewById(R.id.device_name);
+        TextView name = convertView.findViewById(R.id.device_name);
         if (item.isInitName()){
             item.setDisplayName(item.getDisplayName());
         }else{
             item.setDisplayName(item.getOtherArgument()+item.getOriginalName());
         }
         name.setText(item.getDisplayName());
-        TextView address = (TextView) convertView.findViewById(R.id.device_address);
+        TextView address = convertView.findViewById(R.id.device_address);
         address.setText(item.getDevice().getAddress());
-        TextView rssi = (TextView) convertView.findViewById(R.id.device_rssi);
-        rssi.setText(PREFIX_RSSI + Integer.toString(item.getRssi()));
+        TextView rssi = convertView.findViewById(R.id.device_rssi);
+        rssi.setText(PREFIX_RSSI + item.getRssi());
 
-        TextView state = (TextView) convertView.findViewById(R.id.device_state);
+        TextView state = convertView.findViewById(R.id.device_state);
         state.setText(item.getState().name());
 
         return convertView;
@@ -68,7 +68,6 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
             device.setState(state);
             notifyDataSetChanged();
         }
-        return;
     }
 
     /**

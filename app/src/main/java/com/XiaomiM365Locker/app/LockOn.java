@@ -3,10 +3,10 @@ package com.XiaomiM365Locker.app;
 import java.util.Arrays;
 
 public class LockOn implements IRequest {
-    private static int delay = 100;
+    private static final int delay = 100;
     private final String requestBit = "70";
     private final RequestType requestType = RequestType.NOCOUNT;
-    private long startTime;
+    private final long startTime;
 
     public LockOn() {
         this.startTime = System.currentTimeMillis() + delay;

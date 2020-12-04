@@ -8,8 +8,11 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -44,13 +47,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_scanning_state;
     private static final int REQUEST_STARTSCAN = 0;
     private static final String[] PERMISSION_STARTSCAN = new String[] {"android.permission.ACCESS_COARSE_LOCATION"};
-    private Thread attacking_thread = null;
     private BluetoothLeScanner bluetoothLeScanner = null;
     private boolean attack_mode = false;
-    private boolean unlock_mode = false;
+    private boolean unlock_mode = true;
     private ListView lv_scan = null;
     private BluetoothManager btManager = null;
-
+    FloatingActionButton fab_attack = null;
+    FloatingActionButton fab_unlock = null;
+    FloatingActionButton fab_scan = null;
 
     private ScanCallback mLeScanCallback = new ScanCallback() {
         @Override
@@ -79,10 +83,11 @@ public class MainActivity extends AppCompatActivity {
 
             String[] listeMacToExclude = excludedMacs.getText().toString().split("/");
 
-            Boolean ajouterDevice = true;
+            boolean ajouterDevice = true;
             for (String adresseMacActuelle:listeMacToExclude) {
-                if (adresseMacActuelle.equals(device_address)){
+                if (adresseMacActuelle.equals(device_address)) {
                     ajouterDevice = false;
+                    break;
                 }
             }
             if (ajouterDevice){
@@ -110,23 +115,22 @@ public class MainActivity extends AppCompatActivity {
         this.rxBleClient = RxBleClient.create(getApplicationContext());
         this.scanning = false;
         this.lv_scan = findViewById(R.id.devices_list);
-        this.devicesAdapter = new DeviceAdapter(this, R.layout.list_device_item, new ArrayList<Device>());
+        this.devicesAdapter = new DeviceAdapter(this, R.layout.list_device_item, new ArrayList<>());
         lv_scan.setAdapter(this.devicesAdapter);
 
         this.btManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
+        assert btManager != null;
         mBTAdapter = btManager.getAdapter();
 
         bluetoothLeScanner = this.mBTAdapter.getBluetoothLeScanner();
 
 
-        final Runnable r = new Runnable() {
-            public void run() {
-                while(true)
+        final Runnable r = () -> {
+            while(true)
+            {
+                if(scanning)
                 {
-                    if(!scanning)
-                    {
-                        continue;
-                    }
+
                     String address = devices_to_attack.poll();
                     if(address != null)
                     {
@@ -147,44 +151,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        attacking_thread = new Thread(r);
+        Thread attacking_thread = new Thread(r);
 
         attacking_thread.start();
 
-        FloatingActionButton fab_scan = findViewById(R.id.fab_scan);
 
-
-        fab_scan.setOnClickListener((View onClick) -> {
-            if(!scanning)
-            {
-                startScan();
-            }
-            else {
-                stopScan();
-            }
-        });
-
-        FloatingActionButton fab_attack = findViewById(R.id.fab_attack);
+        fab_attack = findViewById(R.id.fab_attack);
         fab_attack.setOnClickListener(OnClickListener -> {
-                if(!attack_mode)
-                {
-                    startAttackMode();
-                }
-                else {
-                    stopAttackMode();
-                }
+           atkPressed();
         });
 
-        FloatingActionButton fab_unlock = findViewById(R.id.fab_unlock);
+        fab_unlock = findViewById(R.id.fab_unlock);
         fab_unlock.setOnClickListener(onClick -> {
-            if(!unlock_mode)
-            {
-                startUnlockMode();
-            }
-            else {
-                stopUnlockMode();
-            }
+          lockPressed();
         });
+
+        fab_scan = findViewById(R.id.fab_scan);
+
+        scanPressed();
+        fab_scan.setOnClickListener((View onClick) -> {
+            scanPressed();
+        });
+
+        atkPressed();
+        lockPressed();
 
         lv_scan.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -199,6 +189,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void scanPressed(){
+        if(!scanning && fab_scan!= null)
+        {
+            ViewCompat.setBackgroundTintList(fab_scan, ColorStateList.valueOf(Color.GREEN));
+
+            fab_scan.setBackgroundColor(Color.GREEN);
+            startScan();
+        }
+        else {
+            ViewCompat.setBackgroundTintList(fab_scan, ColorStateList.valueOf(Color.RED));
+
+
+            stopScan();
+        }
+    }
+
+
+    private void atkPressed(){
+        if(!attack_mode && fab_attack!= null )
+        {
+
+            ViewCompat.setBackgroundTintList(fab_attack, ColorStateList.valueOf(Color.GREEN));
+        }
+        else {
+            ViewCompat.setBackgroundTintList(fab_attack, ColorStateList.valueOf(Color.RED));
+        }
+        attack_mode = !attack_mode;
+
+    }
+
+
+
+    private void lockPressed(){
+        if (attack_mode){
+            if(!unlock_mode && fab_unlock!= null)
+            {
+                ViewCompat.setBackgroundTintList(fab_unlock, ColorStateList.valueOf(Color.GREEN));
+                startUnlockMode();
+            }
+            else {
+                ViewCompat.setBackgroundTintList(fab_unlock, ColorStateList.valueOf(Color.RED));
+
+                stopUnlockMode();
+            }
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -291,21 +329,6 @@ public class MainActivity extends AppCompatActivity {
         tv_scanning_state.setText(state);
     }
 
-    private void startAttackMode() {
-        this.attack_mode = true;
-
-        for (Map.Entry<String, DeviceConnection> device_entry: this.devices_connections.entrySet())
-        {
-            device_entry.getValue().addCommand(new LockOn());
-        }
-        this.updateStatus();
-    }
-
-    private void stopAttackMode() {
-        this.attack_mode = false;
-
-        this.updateStatus();
-    }
 
     private void startUnlockMode() {
         this.unlock_mode = true;
@@ -318,6 +341,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopUnlockMode() {
         this.unlock_mode = false;
+        for (Map.Entry<String, DeviceConnection> device_entry: this.devices_connections.entrySet())
+        {
+            device_entry.getValue().addCommand(new LockOn());
+        }
         this.updateStatus();
     }
 
@@ -334,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         this.btManager= (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
+        assert this.btManager != null;
         mBTAdapter = this.btManager.getAdapter();
 
         bluetoothLeScanner = this.mBTAdapter.getBluetoothLeScanner();

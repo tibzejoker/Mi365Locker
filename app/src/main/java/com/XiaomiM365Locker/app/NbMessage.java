@@ -97,10 +97,7 @@ public class NbMessage {
         msg.add(direction);
         msg.add(rw);
         msg.add(position);
-
-        for (Integer i : payload) {
-            msg.add(i);
-        }
+        msg.addAll(payload);
     }
 
     private void calculateChecksum() {
@@ -111,10 +108,10 @@ public class NbMessage {
     }
 
     private String construct() {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (Integer i : msg) {
-            result += (i >= 0) && (i <= 15) ? "0" + Integer.toHexString(i) : Integer.toHexString(i);
+            result.append((i >= 0) && (i <= 15) ? "0" + Integer.toHexString(i) : Integer.toHexString(i));
         }
-        return result;
+        return result.toString();
     }
 }
