@@ -8,9 +8,12 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,9 +22,13 @@ import android.os.Bundle;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.PermissionUtils;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.polidea.rxandroidble2.RxBleClient;
@@ -55,6 +62,23 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab_attack = null;
     FloatingActionButton fab_unlock = null;
     FloatingActionButton fab_scan = null;
+    public static final String LAST_TEXT = "";
+
+    MainActivity mainActivity = this;
+
+    private boolean isInExcludeList(String device_address){
+        android.support.design.widget.TextInputEditText excludedMacs = findViewById(R.id.macToExclude);
+
+        String[] listeMacToExclude = excludedMacs.getText().toString().split("/");
+
+        for (String adresseMacActuelle:listeMacToExclude) {
+            if (adresseMacActuelle.equals(device_address)) {
+                return true;
+            }
+        }
+        return false;
+
+    }
 
     private ScanCallback mLeScanCallback = new ScanCallback() {
         @Override
@@ -79,23 +103,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             String mDeviceAddress = newDevice.getAddress();
-            android.support.design.widget.TextInputEditText excludedMacs = findViewById(R.id.macToExclude);
 
-            String[] listeMacToExclude = excludedMacs.getText().toString().split("/");
 
-            boolean ajouterDevice = true;
-            for (String adresseMacActuelle:listeMacToExclude) {
-                if (adresseMacActuelle.equals(device_address)) {
-                    ajouterDevice = false;
-                    break;
-                }
-            }
-            if (ajouterDevice){
-                devicesAdapter.getDeviceByAddress(mDeviceAddress).setOtherArgument("(target)");
-                add_device_to_attack(mDeviceAddress);
-            }else{
-                devicesAdapter.getDeviceByAddress(mDeviceAddress).setOtherArgument("(Not Attacked)");
-            }
+
+            add_device_to_attack(mDeviceAddress);
+
         }
     };
 
@@ -115,7 +127,9 @@ public class MainActivity extends AppCompatActivity {
         this.rxBleClient = RxBleClient.create(getApplicationContext());
         this.scanning = false;
         this.lv_scan = findViewById(R.id.devices_list);
+
         this.devicesAdapter = new DeviceAdapter(this, R.layout.list_device_item, new ArrayList<>());
+
         lv_scan.setAdapter(this.devicesAdapter);
 
         this.btManager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -144,7 +158,17 @@ public class MainActivity extends AppCompatActivity {
                         {
                             if (devconn.get_first_command() != null && devconn.getState() == RxBleConnection.RxBleConnectionState.CONNECTED)
                             {
-                                devconn.runNextCommand();
+                                try {
+                                    if (!isInExcludeList(device_entry.getKey())) {
+                                        devconn.runNextCommand();
+                                    }else{
+                                        devconn.deleteNextCommand();
+                                        Log.d("TAG", "onCreate: excluded");
+                                    }
+
+                                }catch (Exception ignored){
+
+                                }
                             }
                         }
                     }
@@ -188,6 +212,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        TextInputEditText excludedMacs = findViewById(R.id.macToExclude);
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        excludedMacs.setText(pref.getString(LAST_TEXT, ""));
+        excludedMacs.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+                pref.edit().putString(LAST_TEXT, s.toString()).apply();
+
+
+            }
+        });
+
     }
 
     private void scanPressed(){

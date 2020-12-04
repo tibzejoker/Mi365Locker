@@ -1,5 +1,8 @@
 <resources>
-    <string name="app_name">XiaomiM365Locker</string>
+    <string name="app_name">XiaomiM365Locker Enhanced</string>
     <string name="title_activity_devices">DevicesActivity</string>
     <string name="title_activity_devices_activity">devices_activity</string>
+    <string name="mac1_mac2_mac3">mac1/mac2/mac3</string>
+    <string name="mac_addresses_to_exlude">Mac addresses to exlude :</string>
+    <string name="state_undefined">State: Undefined</string>
 </resources>

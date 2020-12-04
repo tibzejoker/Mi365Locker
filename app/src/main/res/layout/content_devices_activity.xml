@@ -19,7 +19,7 @@
             android:id="@+id/scannning_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="State: Undefined"
+            android:text="@string/state_undefined"
             app:layout_constraintTop_toTopOf="parent"
             android:textAlignment="center"
             android:textSize="18sp"
@@ -33,16 +33,17 @@
 
             <TextView
                 android:id="@+id/textView2"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Mac addresses to exlude : " />
+                android:text="@string/mac_addresses_to_exlude"
+                tools:ignore="InefficientWeight" />
 
             <android.support.design.widget.TextInputEditText
                 android:id="@+id/macToExclude"
                 android:layout_width="239dp"
                 android:layout_height="wrap_content"
-                android:hint="mac1/mac2/mac3" />
+                android:hint="@string/mac1_mac2_mac3" />
         </LinearLayout>
 
         <ListView

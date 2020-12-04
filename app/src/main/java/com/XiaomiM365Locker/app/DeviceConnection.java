@@ -128,9 +128,13 @@ public class DeviceConnection {
 
             this.connection.writeCharacteristic(UUID.fromString(Constants.CHAR_WRITE), HexString.hexToBytes(command)).subscribe((byte[] bytes) -> this.onWriteSuccess(), this::onWriteFailure);
         } catch (Exception ignored) {
-            Log.e(Constants.TAG, "fail to write", ignored);
         }
 
     }
 
+    public void deleteNextCommand() {
+
+        this.command_to_execute.remove();
+
+    }
 }
