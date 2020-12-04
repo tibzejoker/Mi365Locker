@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                             if (devconn.get_first_command() != null && devconn.getState() == RxBleConnection.RxBleConnectionState.CONNECTED)
                             {
                                 try {
-                                    if (!isInExcludeList(device_entry.getKey())) {
+                                    if (!isInExcludeList(device_entry.getKey()) && attack_mode) {
                                         devconn.runNextCommand();
                                     }else{
                                         devconn.deleteNextCommand();
